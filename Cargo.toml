@@ -1,0 +1,15 @@
+[package]
+name = "pracownie"
+version = "0.1.0"
+edition = "2021"
+
+# Define the library
+[lib]
+name = "my_crate"
+path = "src/lib.rs"
+
+[dependencies]
+
+[dev-dependencies]
+rand = "0.8.5"
+rand_chacha = "0.3.1"
