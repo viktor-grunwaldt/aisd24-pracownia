@@ -2,6 +2,8 @@
 use std::cmp::{max, min, Ordering};
 use std::mem::{replace, swap};
 
+use crate::macros::{println, scanf};
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct AvlNode<T: Ord> {
     pub value: T,

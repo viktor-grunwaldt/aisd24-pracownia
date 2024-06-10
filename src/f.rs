@@ -1,31 +1,27 @@
-// use crate::{println, scanf};
+use crate::macros::{println, scanf};
 
 type Str2d = Vec<Vec<u8>>;
+
+fn read_str2d(w: usize, h: usize) -> Str2d {
+    let mut string = vec![vec![0; w]; h];
+    for row in string.iter_mut() {
+        for e in row.iter_mut() {
+            *e = scanf!(char) as u8;
+        }
+        scanf!(char);
+    }
+    string
+}
 
 fn solve() {
     let (a, b, c, d) = scanf!(usize, usize, usize, usize);
     // skip newline
     scanf!(char);
-
-    let mut needle = vec![vec![0; b]; a];
-    let mut haystack = vec![vec![0; d]; c];
-    for row in needle.iter_mut() {
-        for e in row.iter_mut() {
-            *e = scanf!(char) as u8;
-        }
-        scanf!(char);
-    }
-    for row in haystack.iter_mut() {
-        for e in row.iter_mut() {
-            *e = scanf!(char) as u8;
-        }
-        // newline
-        scanf!(char);
-    }
+    let needle = read_str2d(b, a);
+    let haystack = read_str2d(d, c);
     let res = rk2dv2(needle, haystack);
     println!("{}", res);
 }
-#[allow(dead_code)]
 fn brute_force(needle: Str2d, haystack: Str2d) -> usize {
     let needle_width = needle[0].len();
     let mut acc = 0;
@@ -231,43 +227,6 @@ fn str_count(needle: String, haystack: String) -> usize {
     ans
 }
 
-#[allow(dead_code)]
-fn rk2d(needle: Str2d, haystack: Str2d) -> usize {
-    // ugh, edge case
-    let (hh, _hw) = (haystack.len(), haystack[0].len());
-    let (nh, nw) = (needle.len(), needle[0].len());
-    let len = nh * nw;
-    if nw.min(nh) == 1 {
-        let needle: String = needle.into_iter().flatten().map(|c| c as char).collect();
-        let haystack: String = haystack.into_iter().flatten().map(|c| c as char).collect();
-        return str_count(needle, haystack);
-    }
-    // phase 1 precompute hashes
-    let ps = init_ps(len);
-    let mut hashes = precompute_hashes(&needle, &haystack, &ps);
-    let hashed_needle: Hash = init_hash(&needle, nw, nh, &ps);
-    // check and down
-    let mut acc = 0;
-    for i in 0..=hh - nh {
-        for (j, h) in hashes.iter_mut().enumerate() {
-            // verify
-            if *h == hashed_needle
-                && needle
-                    .iter()
-                    .zip(haystack[i..].iter())
-                    .all(|(nr, hr)| *nr == hr[j..(j + nw)])
-            {
-                acc += 1;
-            }
-            // rollover if not last row
-            if i < hh - nh {
-                *h = roll_hash_down(*h, &ps, &haystack, j, i, nw, nh);
-            }
-        }
-    }
-
-    acc
-}
 fn rk2dv2(needle: Str2d, haystack: Str2d) -> usize {
     // ugh, edge case
     let (hh, _hw) = (haystack.len(), haystack[0].len());
@@ -447,18 +406,6 @@ mod tests {
         assert_eq!(hn2, hhay);
     }
     #[test]
-    fn ex_a_rk() {
-        let needle = str2str2d("BCB\nCBC");
-        let haystack = str2str2d("BCBCB\nCBCBC\nAABAA");
-        assert_eq!(rk2d(needle, haystack), 2);
-    }
-    #[test]
-    fn ex_b_rk() {
-        let needle = str2str2d("AA\nAA");
-        let haystack = str2str2d("BAAAB\nBAAAB\nBAAAB");
-        assert_eq!(rk2d(needle, haystack), 4);
-    }
-    #[test]
     fn ex_a_rk2() {
         let needle = str2str2d("BCB\nCBC");
         let haystack = str2str2d("BCBCB\nCBCBC\nAABAA");
@@ -548,19 +495,14 @@ mod tests {
         assert_eq!(h, rolling);
         assert_eq!(h, right_rolling);
     }
-    #[test]
-    fn ex_c_rk() {
-        let needle = str2str2d("ZZZ\nZZZ\nZZZ");
-        let haystack = str2str2d("AAA\nAAA\nAAA");
-        assert_eq!(rk2d(needle, haystack), 0);
-    }
+
     #[test]
     fn ex_c_rk2() {
         let needle = str2str2d("ZZZ\nZZZ\nZZZ");
         let haystack = str2str2d("AAA\nAAA\nAAA");
         assert_eq!(rk2dv2(needle, haystack), 0);
     }
-    #[ignore]
+    #[ignore = "slow"]
     #[test]
     fn rk_random() {
         let mut seed: u64 = 0xdeadbeefdeadbeef;
@@ -571,11 +513,9 @@ mod tests {
         let haystack = gen_str2d(hw, hh, &mut rng, |c| c + 0x41);
         let ba = brute_force(needle.clone(), haystack.clone());
         let rk2 = rk2dv2(needle.clone(), haystack.clone());
-        let rk = rk2d(needle, haystack);
-        assert_eq!(ba, rk);
         assert_eq!(ba, rk2);
     }
-    #[ignore]
+    #[ignore = "slow"]
     #[test]
     fn rk_random_grid() {
         let mut seed: u64 = 0xdeadbeefdeadbeef;
@@ -595,12 +535,10 @@ mod tests {
         assert_eq!((hw, hh), (haystack[0].len(), haystack.len()));
         let ba = brute_force(needle.clone(), haystack.clone());
         let rk2 = rk2dv2(needle.clone(), haystack.clone());
-        let rk = rk2d(needle, haystack);
         assert_eq!(reps * reps, ba);
-        assert_eq!(reps * reps, rk);
         assert_eq!(reps * reps, rk2);
     }
-    #[ignore]
+    #[ignore = "slow"]
     #[test]
     fn rk_worst_case() {
         let mut needle: Str2d = (0..200)
@@ -610,9 +548,7 @@ mod tests {
         let haystack: Str2d = (0..200).map(|_| (0..200).map(|_| 0x41).collect()).collect();
         let ba = brute_force(needle.clone(), haystack.clone());
         let rk2 = rk2dv2(needle.clone(), haystack.clone());
-        let rk = rk2d(needle, haystack);
         assert_eq!(0, ba);
-        assert_eq!(0, rk);
         assert_eq!(0, rk2);
     }
 

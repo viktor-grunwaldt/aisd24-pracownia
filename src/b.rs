@@ -1,4 +1,7 @@
-use crate::macros;
+use crate::{
+    macros::{println, scanf},
+    radix,
+};
 
 pub const N: usize = 500_000;
 // Window Capacity for the rotating array
@@ -7,6 +10,7 @@ const WC: usize = 16;
 type Pt = (i32, i32);
 type Triangle = (Pt, Pt, Pt);
 
+#[inline]
 fn dist(slf: &Pt, oth: &Pt) -> f32 {
     let dx = (slf.0 - oth.0) as i64;
     let dy = (slf.1 - oth.1) as i64;
@@ -14,6 +18,7 @@ fn dist(slf: &Pt, oth: &Pt) -> f32 {
     (sum as f32).sqrt()
 }
 
+#[inline]
 fn perim(a: &Pt, b: &Pt, c: &Pt) -> f32 {
     dist(a, b) + dist(a, c) + dist(b, c)
 }
@@ -105,20 +110,22 @@ fn rec(n: usize, p_by_x: &[Pt], p_by_y: &[Pt], min_t: &mut Triangle, min_p: &mut
 pub fn div_and_conq(p: &mut [Pt], n: usize) -> Triangle {
     let mut min_t = (p[0], p[1], p[2]);
     let mut min_p = perim(&p[0], &p[1], &p[2]);
-    p[..n].sort_unstable_by_key(|&e| e.1);
+    // p[..n].sort_unstable_by_key(|&e| e.1);
+    radix::sort_by_y(&mut p[..n]);
     let p_by_y = p.to_vec();
-    p[..n].sort_unstable();
+    // p[..n].sort_unstable();
+    radix::sort_by_x(&mut p[..n]);
 
     rec(n, &p[..n], &p_by_y[..n], &mut min_t, &mut min_p);
     min_t
 }
 pub fn solve() {
-    let n = macros::scanf!(usize);
+    let n = scanf!(usize);
     assert!(n <= N, "input has exceeded size specifed in task");
 
     let mut punkty = [(0, 0); N];
     for e in punkty.iter_mut().take(n) {
-        *e = macros::scanf!(i32, i32);
+        *e = scanf!(i32, i32);
     }
     let (a, b, c) = div_and_conq(&mut punkty, n);
     println!("{} {}", a.0, a.1);

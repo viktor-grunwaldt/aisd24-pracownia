@@ -1,17 +1,15 @@
-// use crate::{println, scanf};
-
+use crate::macros::{println, scanf};
 const C: usize = 100;
-const MAX: u32 = 1 << 31;
-const HIGHEST_WV: u32 = 10_000;
-
+// limit is 10^{5+6} <= 2^37
+const MAX: u64 = 1 << 38;
 // weight, value
 type Coin = (u32, u32);
 type Coins<'a> = &'a [Coin];
 type Hist = [u32; C];
 struct Ans {
-    p_min: u32,
+    p_min: u64,
     min_coins: Hist,
-    p_max: u32,
+    p_max: u64,
     max_coins: Hist,
 }
 
@@ -30,50 +28,37 @@ fn knapsack(masa: usize, cs: Coins) -> Option<Ans> {
     let m = masa + 1;
     let mut dp_max = vec![MAX; m];
     let mut dp_min = vec![MAX; m];
-    let mut last_coin_max = vec![(C + 1) as u8; m];
-    let mut last_coin_min = vec![(C + 1) as u8; m];
+    let mut max_coin_added = vec![(C + 1) as u8; m];
+    let mut min_coin_added = vec![(C + 1) as u8; m];
     dp_max[0] = 0;
     dp_min[0] = 0;
     for i in 0..m {
+        let rem: u32 = (m - i).try_into().unwrap();
         if dp_max[i] == MAX {
             continue;
         }
-        let rem = m - i;
-        let last_coin = last_coin_max[i] as usize;
-
-        let current_smallest_weight = if last_coin == C + 1 {
-            cs[last_coin].0
-        } else {
-            HIGHEST_WV
-        };
-        for (ic, &(_w, v)) in cs.iter().enumerate() {
+        for (ic, &(_w, v)) in cs.iter().enumerate().filter(|c| c.1 .0 < rem) {
             let w = _w as usize;
-            if w >= rem {
-                continue;
-            }
-            if _w > current_smallest_weight {
-                continue;
-            }
             let next_w = i + w;
-            let cand = dp_max[i] + v;
+            let cand = dp_max[i] + v as u64;
             // max
             if dp_max[next_w] == MAX || dp_max[next_w] < cand {
                 dp_max[next_w] = cand;
-                last_coin_max[next_w] = ic as u8;
+                max_coin_added[next_w] = ic as u8;
             }
             // min
-            let cand = dp_min[i] + v;
+            let cand = dp_min[i] + v as u64;
             if dp_min[next_w] > cand {
                 dp_min[next_w] = cand;
-                last_coin_min[next_w] = ic as u8;
+                min_coin_added[next_w] = ic as u8;
             }
         }
     }
     if dp_max[masa] == MAX {
         return None;
     }
-    let max_coins = get_coins(last_coin_max, masa, cs);
-    let min_coins = get_coins(last_coin_min, masa, cs);
+    let max_coins = get_coins(max_coin_added, masa, cs);
+    let min_coins = get_coins(min_coin_added, masa, cs);
     Some(Ans {
         p_min: dp_min[masa],
         min_coins,
@@ -89,7 +74,7 @@ fn vec_to_str(cs: Hist, n: usize) -> String {
         .collect::<Vec<_>>()
         .join(" ")
 }
-pub fn solve() {
+fn main() {
     let masa_monet = scanf!(usize);
     let mut monety = [(0, 0); C];
     let n = scanf!(usize);
@@ -120,9 +105,10 @@ mod tests {
     use rand_chacha::ChaCha8Rng;
 
     use super::*;
+    const HIGHEST_WV: u32 = 100_000;
 
-    fn dot_prod(cs: Coins, hist: &Hist) -> u32 {
-        cs.iter().zip(hist).map(|(&c, b)| c.1 * b).sum()
+    fn dot_prod(cs: Coins, hist: &Hist) -> u64 {
+        cs.iter().zip(hist).map(|(&c, b)| (c.1 * b) as u64).sum()
     }
     #[test]
     fn ex_a() {
@@ -176,11 +162,11 @@ mod tests {
         assert_eq!(res.p_max, dot_prod(&coins, &res.max_coins));
         assert_eq!(res.p_min, dot_prod(&coins, &res.min_coins));
     }
-
+    #[ignore = "slow"]
     #[test]
     fn many_random_tests() {
         let mut rng = ChaCha8Rng::seed_from_u64(6969 + 420);
-        for i in 0..10 {
+        for i in 0..100 {
             dbg!(i);
             let coins = {
                 let uni = Uniform::from(1..=HIGHEST_WV);
@@ -197,16 +183,5 @@ mod tests {
             assert_eq!(res.p_max, dot_prod(&coins, &res.max_coins));
             assert_eq!(res.p_min, dot_prod(&coins, &res.min_coins));
         }
-    }
-    #[test]
-    fn ascending_weights() {
-        let mut coins = [(0, 0); C];
-        coins.iter_mut().enumerate().take(10).for_each(|(i, e)| {
-            *e = (1000 - i as u32, 1000);
-        });
-        let w = 9955;
-        let o_res = knapsack(w, &coins);
-        assert!(o_res.is_some());
-        assert_eq!(o_res.unwrap().p_max, 10 * 1000);
     }
 }

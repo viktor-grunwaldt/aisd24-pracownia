@@ -3,6 +3,8 @@ use std::{
     io::{self, Write},
 };
 
+use crate::radix;
+
 macro_rules! scan {
     ( $string:expr, $sep:expr, $( $x:ty ),+ ) => {{
         let mut iter = $string.split($sep);
@@ -28,7 +30,7 @@ fn binary_search_leftmost(arr: &[(u32, u32)], value: &u32) -> Result<usize, usiz
         Err(left)
     }
 }
-
+#[inline]
 fn is_ancestor(u: usize, v: usize, times: &[Option<(u32, u32)>]) -> bool {
     if let Some((l, r)) = times[u] {
         if let Some((li, ri)) = times[v] {
@@ -37,11 +39,11 @@ fn is_ancestor(u: usize, v: usize, times: &[Option<(u32, u32)>]) -> bool {
     }
     false
 }
-
+#[inline]
 fn unmark(x: u32) -> usize {
     (x & 0x7fff_ffff) as usize
 }
-
+#[inline]
 fn mark(x: u32) -> u32 {
     x | (1 << 31)
 }
@@ -87,7 +89,8 @@ fn produce_times(n: usize, lines: impl Iterator<Item = String>) -> Vec<Option<(u
         .enumerate()
         .map(|(i, e)| ((i + 2) as u32, e))
         .collect();
-    daughters.sort_unstable_by_key(|x| x.1);
+    // daughters.sort_unstable_by_key(|e| e.1);
+    radix::sort_by_y_uint(daughters.as_mut_slice());
     iterative_dfs_with_timemarks(daughters)
 }
 

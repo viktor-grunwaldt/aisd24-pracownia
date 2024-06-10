@@ -4,7 +4,7 @@ use std::mem::swap;
 
 const BUCKETS: usize = 256;
 
-fn radix_sort_sign(a: &mut [i32]) {
+pub fn radix_sort_sign(a: &mut [i32]) {
     let mut histogram = [[0; BUCKETS]; 4];
     for e in &*a {
         let mut num = (*e ^ (-0x8000_0000)) as usize;
@@ -80,9 +80,8 @@ fn radix_sort(a: &mut [u32]) {
         *target = val;
     }
 }
-
-type Pt = (u32, u32);
-fn radix_sort_by_fst(a: &mut [Pt]) {
+type Pt_u = (u32, u32);
+fn sort_by_x_uint(a: &mut [Pt_u]) {
     let mut histogram = [[0; BUCKETS]; 4];
     for e in &*a {
         let mut num = e.0 as usize;
@@ -103,7 +102,7 @@ fn radix_sort_by_fst(a: &mut [Pt]) {
         }
     }
     let mut sort_from = a.to_vec();
-    let mut sort_to: Vec<Pt> = vec![(0, 0); a.len()];
+    let mut sort_to: Vec<Pt_u> = vec![(0, 0); a.len()];
     for i in 0..4 {
         let mut offsets = histogram[i];
         for e in sort_from.iter() {
@@ -116,6 +115,124 @@ fn radix_sort_by_fst(a: &mut [Pt]) {
     }
     for (val, target) in sort_from.into_iter().zip(a) {
         *target = val;
+    }
+}
+
+pub fn sort_by_y_uint(a: &mut [Pt_u]) {
+    let mut histogram = [[0; BUCKETS]; 4];
+    for e in &*a {
+        let mut num = e.1 as usize;
+
+        for i in 0..4 {
+            let byte = num & 0xFF;
+            histogram[i][byte] += 1;
+            num >>= 8;
+        }
+    }
+
+    for i in 0..4 {
+        let mut temp = histogram[i][0];
+        histogram[i][0] = 0;
+        for j in 1..BUCKETS {
+            swap(&mut histogram[i][j], &mut temp);
+            histogram[i][j] += histogram[i][j - 1];
+        }
+    }
+    let mut sort_from = a.to_vec();
+    let mut sort_to: Vec<Pt_u> = vec![(0, 0); a.len()];
+    for i in 0..4 {
+        let mut offsets = histogram[i];
+        for e in sort_from.iter() {
+            let byte = ((e.1 >> (8 * i)) & 0xFF) as usize;
+            let pos = offsets[byte];
+            offsets[byte] += 1;
+            sort_to[pos] = *e;
+        }
+        swap(&mut sort_to, &mut sort_from);
+    }
+    for (val, target) in sort_from.into_iter().zip(a) {
+        *target = val;
+    }
+}
+type Pt = (i32, i32);
+pub fn sort_by_x(a: &mut [Pt]) {
+    let mut histogram = [[0; BUCKETS]; 4];
+    for e in &*a {
+        let mut num = (e.0 ^ (-0x8000_0000)) as usize;
+
+        for i in 0..4 {
+            let byte = num & 0xFF;
+            histogram[i][byte] += 1;
+            num >>= 8;
+        }
+    }
+
+    for i in 0..4 {
+        let mut temp = histogram[i][0];
+        histogram[i][0] = 0;
+        for j in 1..BUCKETS {
+            swap(&mut histogram[i][j], &mut temp);
+            histogram[i][j] += histogram[i][j - 1];
+        }
+    }
+    let mut sort_from = a.to_vec();
+    let mut sort_to: Vec<Pt> = vec![(0, 0); a.len()];
+    for i in 0..3 {
+        let mut offsets = histogram[i];
+        for e in sort_from.iter() {
+            let byte = ((e.0 >> (8 * i)) & 0xFF) as usize;
+            let pos = offsets[byte];
+            offsets[byte] += 1;
+            sort_to[pos] = *e;
+        }
+        swap(&mut sort_to, &mut sort_from);
+    }
+    for e in sort_from.into_iter() {
+        // casting i32 to u32 so that we do a logical bitshift instead of an arithmetic one
+        let byte = ((e.0 as u32 ^ 0x8000_0000) >> 24) as usize;
+        let pos = histogram[3][byte];
+        histogram[3][byte] += 1;
+        a[pos] = e;
+    }
+}
+pub fn sort_by_y(a: &mut [Pt]) {
+    let mut histogram = [[0; BUCKETS]; 4];
+    for e in &*a {
+        let mut num = (e.1 ^ (-0x8000_0000)) as usize;
+
+        for i in 0..4 {
+            let byte = num & 0xFF;
+            histogram[i][byte] += 1;
+            num >>= 8;
+        }
+    }
+
+    for i in 0..4 {
+        let mut temp = histogram[i][0];
+        histogram[i][0] = 0;
+        for j in 1..BUCKETS {
+            swap(&mut histogram[i][j], &mut temp);
+            histogram[i][j] += histogram[i][j - 1];
+        }
+    }
+    let mut sort_from = a.to_vec();
+    let mut sort_to: Vec<Pt> = vec![(0, 0); a.len()];
+    for i in 0..3 {
+        let mut offsets = histogram[i];
+        for e in sort_from.iter() {
+            let byte = ((e.1 >> (8 * i)) & 0xFF) as usize;
+            let pos = offsets[byte];
+            offsets[byte] += 1;
+            sort_to[pos] = *e;
+        }
+        swap(&mut sort_to, &mut sort_from);
+    }
+    for e in sort_from.into_iter() {
+        // casting i32 to u32 so that we do a logical bitshift instead of an arithmetic one
+        let byte = ((e.1 as u32 ^ 0x8000_0000) >> 24) as usize;
+        let pos = histogram[3][byte];
+        histogram[3][byte] += 1;
+        a[pos] = e;
     }
 }
 
