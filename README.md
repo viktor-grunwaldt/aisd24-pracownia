@@ -19,6 +19,10 @@ Aby spreparować taki samodzielny plik, każdy z osobnych plików-modułów moż
   
 <summary>Przykład takiego złączonego pliku:</summary>
 
+`lazy_static, buf, io, scan, sync` pochodzą z lib.rs
+`macros` pochodzi z macros.rs
+`radix` pochodzi z radix.rs
+
 ```rust
     #[macro_use]
     mod lazy_static {
