@@ -2,13 +2,20 @@
 
 Pracownia z AiSD (2024), Instytut Informatyki, Uniwersytet Wrocławski
 
-## kompilacja
+## używanie i kompilacja lokalnie
+
+Aby wykonać pracownię X, importujemy solve z pliku X.rs do main.rs
+
+Aby skompilować: `cargo build --release`
+
+## kompilacja na sprawdzaczce
 
 Programy mają być kompilowane i uruchamiane w 64-bitowym środowisku Linux na komputerze PC.
 Pamięć cache procesora sprawdzaczki to 3 MB.
 
 Rust, kompilator rustc 1.63.0
-rustc –edition=2021 -C opt-level=2 -C target-feature=+crt-static
+
+komenda do kompilowania:  `rustc –edition=2021 -C opt-level=2 -C target-feature=+crt-static`
 
 Wymaganiem jest fakt że kompletny program musi być w jednym pliku, żadne moduły spoza biblioteki standardowej nie będą importowane.
 Aby spreparować taki samodzielny plik, każdy z osobnych plików-modułów można przekleić do pliku main.rs wewnątrz bloku `mod (nazwa pliku) { zawartość pliku }`
@@ -80,3 +87,5 @@ Aby spreparować taki samodzielny plik, każdy z osobnych plików-modułów moż
     }
 ```
 </details>
+
+## Zadania
