@@ -17,7 +17,8 @@ Aby spreparować taki samodzielny plik, każdy z osobnych plików-modułów moż
   <summary>
     Przykład takiego złączonego pliku:
   </summary>
-  ```rs
+```rs
+
 #[macro_use]
 mod lazy_static {
     // ...
@@ -72,5 +73,6 @@ use radix::sort_by_x;
 fn main() {
   // body here
 }
+
 ```
 </details>
