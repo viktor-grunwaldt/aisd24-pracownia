@@ -54,7 +54,7 @@ pub fn solve() {
         )
         .collect::<Vec<u32>>();
     assert_eq!(l, histogram.len() - 1, "input does not match");
-    assert!(l <= 1002, "this algorithm will be too slow");
+    // assert!(l <= 1002, "this algorithm will be too slow");
     let (min_ct, layout) = solve_dp(k, histogram);
     let out = layout
         .iter()
